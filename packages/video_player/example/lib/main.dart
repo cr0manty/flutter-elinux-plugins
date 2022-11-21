@@ -12,6 +12,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter/widgets.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() {
   runApp(
@@ -67,17 +69,16 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   // https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm
 
   Future<void> _createController() async {
-    _controller?.dispose();
-    if (_textController.text.startsWith('http')) {
-      _controller = VideoPlayerController.network(
-        _textController.text,
-      );
-    } else {
-      final file = File(_textController.text);
-      _controller = VideoPlayerController.file(
-        file,
-      );
+    final FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result?.files.single.path == null) {
+      return;
     }
+    final File file = File(result!.files.single.path!);
+    _controller?.dispose();
+    _controller = VideoPlayerController.file(
+      file,
+    );
     _controller!.addListener(() {
       setState(() {});
     });
@@ -100,11 +101,10 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
       child: Column(
         children: <Widget>[
           Container(padding: const EdgeInsets.only(top: 20.0)),
-          TextField(
-            controller: _textController,
-            onSubmitted: (_) async {
+          TextButton(
+            onPressed: () async {
               await _createController();
-            },
+            }, child: Text('Select file'),
           ),
           const Text('With remote video'),
           Container(

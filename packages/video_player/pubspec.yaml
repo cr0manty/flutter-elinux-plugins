@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   video_player_platform_interface: ^5.1.1
+  file_picker: ^5.2.2
 
 flutter:
   plugin:
