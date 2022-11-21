@@ -54,26 +54,36 @@ class _BumbleBeeRemoteVideo extends StatefulWidget {
 }
 
 class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
-  late VideoPlayerController _controller;
+  final _textController = TextEditingController();
+  VideoPlayerController? _controller;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  // https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm
+
+  Future<void> _createController() async {
+    _controller?.dispose();
     _controller = VideoPlayerController.network(
-      'https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm',
+      _textController.text,
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
 
-    _controller.addListener(() {
+    _controller!.addListener(() {
       setState(() {});
     });
-    _controller.setLooping(true);
-    _controller.initialize();
+    await _controller!.setLooping(true);
+    await _controller!.initialize();
+    setState(() {
+
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -83,18 +93,26 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
       child: Column(
         children: <Widget>[
           Container(padding: const EdgeInsets.only(top: 20.0)),
+          TextField(
+            controller: _textController,
+            onSubmitted: (_) async {
+              await _createController();
+            },
+          ),
           const Text('With remote video'),
           Container(
             padding: const EdgeInsets.all(20),
             child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
+              aspectRatio: _controller?.value.aspectRatio ?? 1.0,
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: <Widget>[
-                  VideoPlayer(_controller),
-                  ClosedCaption(text: _controller.value.caption.text),
-                  _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                  if (_controller != null) VideoPlayer(_controller!),
+                  ClosedCaption(text: _controller?.value.caption.text ?? ''),
+                  if (_controller != null)
+                    _ControlsOverlay(controller: _controller!),
+                  if (_controller != null)
+                    VideoProgressIndicator(_controller!, allowScrubbing: true),
                 ],
               ),
             ),
